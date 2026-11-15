@@ -1,0 +1,16 @@
+services:
+  split:
+    build: .
+    ports: ["8080:8080"]
+    # a named volume, so the folder belongs to the user the server runs as
+    volumes: ["split-data:/app/data"]
+    restart: unless-stopped
+    # mail for login codes; without these the code is printed in the server log
+    environment:
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+volumes:
+  split-data:

@@ -1,0 +1,19 @@
+# dependencies and build output
+node_modules/
+dist/
+dev-dist/
+*.tsbuildinfo
+
+# the server's database and anything secret (SMTP settings for login mail live in .env)
+data/
+.env
+.env.*
+!.env.example
+
+# logs and local tooling
+*.log
+npm-debug.log*
+.claude/settings.local.json
+.DS_Store
+.vscode/
+.idea/
