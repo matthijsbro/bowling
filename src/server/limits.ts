@@ -22,12 +22,13 @@ export const LIMITS = {
   // load
   MAX_CONNECTIONS: num('MAX_CONNECTIONS', 500),            // open game connections, all players together
   MAX_CONNECTIONS_PER_IP: num('MAX_CONNECTIONS_PER_IP', 20), // one household on one wifi still fits
-  MESSAGES_PER_10_SECONDS: num('MESSAGES_PER_10_SECONDS', 100), // per connection; normal play uses a handful
+  MESSAGES_PER_10_SECONDS: num('MESSAGES_PER_10_SECONDS', 100), // game messages (votes, throws) per open game connection; not mail
 };
 export type Limit = keyof typeof LIMITS;
 
-/** Only behind a reverse proxy may the X-Forwarded-For header be believed; otherwise anyone could pick their own address. */
-const TRUST_PROXY = ['1', 'true', 'yes'].includes(String(process.env.TRUST_PROXY).toLowerCase());
+/** The server runs behind Caddy, which sets X-Forwarded-For. Set TRUST_PROXY=0 when it faces the internet directly,
+ *  or anyone could pick their own address and slip past the per-address limits. */
+const TRUST_PROXY = !['0', 'false', 'no'].includes(String(process.env.TRUST_PROXY ?? '').toLowerCase());
 export const ipOf = (req: IncomingMessage) =>
   (TRUST_PROXY && String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim()) || req.socket.remoteAddress || 'unknown';
 
