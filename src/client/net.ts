@@ -28,7 +28,10 @@ export function connect(first: Out, room: (r: Room) => void, error: (msg: string
 }
 function open() {
   sock = new WebSocket(`${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/ws`);
-  sock.onopen = () => sock!.send(JSON.stringify(rejoin));
+  sock.onopen = () => {
+    if (rejoin) sock!.send(JSON.stringify(rejoin));
+    if (rejoin?.t === 'create') rejoin = null; // a dropped connection must not make a second team; the room message sets up the rejoin
+  };
   sock.onmessage = (m) => {
     const msg = JSON.parse(m.data);
     if (msg.t === 'room') {
@@ -36,7 +39,8 @@ function open() {
       onRoom(msg);
     } else if (msg.t === 'error') onError(msg.msg);
   };
-  sock.onclose = () => { if (wanted) setTimeout(open, 2000); };
+  // busy (1013): wait longer before trying again. Closed for flooding (1008): stop.
+  sock.onclose = (e) => { if (e.code === 1008) wanted = false; if (wanted && rejoin) setTimeout(open, e.code === 1013 ? 15000 : 2000); };
 }
 export const send = (msg: Out) => { if (sock?.readyState === WebSocket.OPEN) sock.send(JSON.stringify(msg)); };
 export function leave() { wanted = false; send({ t: 'leave' }); sock?.close(); sock = null; }

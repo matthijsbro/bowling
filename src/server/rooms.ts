@@ -8,6 +8,7 @@ import { newGame, step, summary, toRemember, type Ev, type Game, type View } fro
 import type { Claim } from '../shared/types.ts';
 import { recordGame } from './auth.ts';
 import { db as open } from './db.ts';
+import { LIMITS, Window, allow, under } from './limits.ts';
 
 type Member = { token: string; name: string; user?: number; sock?: WebSocket };
 /** `rules` is what the alley remembers of this team from earlier nights. */
@@ -17,6 +18,10 @@ const db = open();
 db.prepare('DELETE FROM rooms WHERE updated < ?').run(Date.now() - 30 * 86400e3); // teams untouched for a month are forgotten
 const rooms = new Map<string, Room>();
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O or 1/I to mix up when read aloud
+const HOUR = 3600e3;
+const teamsPerIp = new Window('TEAMS_PER_HOUR_PER_IP', HOUR), teamsPerHour = new Window('TEAMS_PER_HOUR', HOUR);
+const joinsPerIp = new Window('JOINS_PER_MINUTE_PER_IP', 60e3), messages = new Window('MESSAGES_PER_10_SECONDS', 10e3);
+let sockets = 0;
 
 function save(r: Room) {
   db.prepare('INSERT OR REPLACE INTO rooms VALUES (?, ?, ?)').run(r.id, JSON.stringify({ members: r.members.map(({ token, name, user }) => ({ token, name, user })), game: r.game, rules: r.rules }), Date.now());
@@ -51,8 +56,9 @@ function broadcast(r: Room) {
 
 const text = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-export function serve(sock: WebSocket, user?: number) {
-  let room: Room | undefined, me: Member | undefined;
+export function serve(sock: WebSocket, user?: number, ip = 'unknown') {
+  let room: Room | undefined, me: Member | undefined, dropped = 0;
+  const self = `s${++sockets}`;
   const fail = (msg: string) => sock.send(JSON.stringify({ t: 'error', msg }));
   const seat = (r: Room, token: string, name: string) => {
     let m = r.members.find((x) => x.token === token);
@@ -69,10 +75,20 @@ export function serve(sock: WebSocket, user?: number) {
   };
 
   sock.on('message', (raw) => {
+    // a flood is dropped; a connection that keeps flooding is closed
+    if (!allow(Date.now(), [messages, self])) {
+      if (++dropped === 1) fail('Slow down a little: the alley cannot keep up.');
+      if (dropped > LIMITS.MESSAGES_PER_10_SECONDS) sock.close(1008, 'flood');
+      return;
+    }
+    dropped = 0;
     let msg: any;
     try { msg = JSON.parse(String(raw)); } catch { return; }
     const token = text(msg?.token, 64), name = text(msg?.name, 20) || 'Bowler';
     if (msg?.t === 'create' && token) {
+      const stored = (db.prepare('SELECT COUNT(*) AS n FROM rooms').get() as { n: number }).n;
+      if (!under('MAX_TEAMS', stored)) return fail('The alley has no room for new teams right now. Join an existing team, or play on this device.');
+      if (!allow(Date.now(), [teamsPerIp, ip], [teamsPerHour, 'all'])) return fail('Too many new teams in a short time. Try again in a while, or join an existing team.');
       let id = '';
       do id = Array.from({ length: 6 }, () => ALPHABET[randomInt(ALPHABET.length)]).join(''); while (load(id));
       const r: Room = { id, members: [], game: null, rules: [] };
@@ -80,6 +96,7 @@ export function serve(sock: WebSocket, user?: number) {
       return seat(r, token, name);
     }
     if (msg?.t === 'join' && token) {
+      if (!allow(Date.now(), [joinsPerIp, ip])) return fail('Too many tries. Wait a minute, then check the team id.');
       const r = load(text(msg.team, 6).toUpperCase());
       return r ? seat(r, token, name) : fail('No team with that id. Check the six characters.');
     }
@@ -111,6 +128,8 @@ export function serve(sock: WebSocket, user?: number) {
     me.sock = undefined;
     // a seat is only given up before the game starts; mid-game it waits for its owner
     if (!room.game) room.members = room.members.filter((m) => m !== me);
+    if (!room.members.length) { db.prepare('DELETE FROM rooms WHERE id = ?').run(room.id); rooms.delete(room.id); return; } // a team nobody ever played in
     broadcast(room);
+    if (!room.members.some((m) => m.sock)) rooms.delete(room.id); // everyone gone: it is saved, so let it go from memory
   });
 }

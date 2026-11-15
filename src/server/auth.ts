@@ -2,8 +2,9 @@
 // Nothing here is needed to play; an account only carries your history and remembered rules between devices.
 import { createHash, randomBytes, randomInt, timingSafeEqual } from 'node:crypto';
 import type { DatabaseSync } from 'node:sqlite';
+import { Window, allow, under } from './limits.ts';
 
-const CODE_MINUTES = 10, MAX_TRIES = 5, WINDOW = 10 * 60e3;
+const CODE_MINUTES = 10, MAX_TRIES = 5, TEN_MIN = 10 * 60e3, DAY = 86400e3;
 const sha = (s: string) => createHash('sha256').update(s).digest('hex');
 const sameHash = (a: string, b: string) => a.length === b.length && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 export const cleanEmail = (v: unknown) => {
@@ -11,33 +12,34 @@ export const cleanEmail = (v: unknown) => {
   return e.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) ? e : '';
 };
 
-// how often an address or a caller may ask for a code; kept in memory, which is enough for one server
-const asked = new Map<string, number[]>();
-function allow(key: string, max: number, now: number) {
-  const recent = (asked.get(key) ?? []).filter((t) => now - t < WINDOW);
-  if (recent.length >= max) { asked.set(key, recent); return false; }
-  asked.set(key, [...recent, now]);
-  return true;
-}
+// how often a caller or an address may ask for a code, and how fast new accounts may appear
+const codesPerIp = new Window('CODES_PER_10_MIN_PER_IP', TEN_MIN), codesPerAddress = new Window('CODES_PER_10_MIN_PER_ADDRESS', TEN_MIN);
+const accountsPerIp = new Window('ACCOUNTS_PER_DAY_PER_IP', DAY), accountsPerDay = new Window('ACCOUNTS_PER_DAY', DAY);
 
 /** Makes a code for this address and hands it to `send`. Says "ok" either way unless the caller is asking too often. */
 export async function requestCode(db: DatabaseSync, emailIn: unknown, ip: string, now: number, send: (email: string, code: string) => Promise<void> | void): Promise<'ok' | 'bad-email' | 'too-many'> {
   const email = cleanEmail(emailIn);
   if (!email) return 'bad-email';
-  if (!allow(`ip:${ip}`, 10, now) || !allow(`mail:${email}`, 3, now)) return 'too-many';
+  if (!allow(now, [codesPerIp, ip], [codesPerAddress, email])) return 'too-many';
   const code = String(randomInt(1e6)).padStart(6, '0');
   db.prepare('INSERT OR REPLACE INTO codes (email, hash, expires, tries) VALUES (?, ?, ?, 0)').run(email, sha(`${email}:${code}`), now + CODE_MINUTES * 60e3);
   await send(email, code);
   return 'ok';
 }
 
-/** Right code in time: you get a session token. Wrong five times and the code is dead. */
-export function verifyCode(db: DatabaseSync, emailIn: unknown, codeIn: unknown, now: number): { token: string; email: string } | null {
+/** Right code in time: you get a session token. Wrong five times and the code is dead.
+ *  'full' means the code was right but no new account may be made just now; the code stays valid. */
+export function verifyCode(db: DatabaseSync, emailIn: unknown, codeIn: unknown, now: number, ip: string): { token: string; email: string } | 'full' | null {
   const email = cleanEmail(emailIn), code = typeof codeIn === 'string' ? codeIn.replace(/\D/g, '') : '';
   const row = email && (db.prepare('SELECT hash, expires, tries FROM codes WHERE email = ?').get(email) as { hash: string; expires: number; tries: number } | undefined);
   if (!row) return null;
   if (row.expires < now || row.tries >= MAX_TRIES) { db.prepare('DELETE FROM codes WHERE email = ?').run(email); return null; }
   if (!sameHash(row.hash, sha(`${email}:${code}`))) { db.prepare('UPDATE codes SET tries = tries + 1 WHERE email = ?').run(email); return null; }
+  const known = db.prepare('SELECT 1 FROM users WHERE email = ?').get(email);
+  if (!known) {
+    const total = (db.prepare('SELECT COUNT(*) AS n FROM users').get() as { n: number }).n;
+    if (!under('MAX_ACCOUNTS', total) || !allow(now, [accountsPerIp, ip], [accountsPerDay, 'all'])) return 'full';
+  }
   db.prepare('DELETE FROM codes WHERE email = ?').run(email);
   db.prepare('INSERT OR IGNORE INTO users (email, created) VALUES (?, ?)').run(email, now);
   const user = (db.prepare('SELECT id FROM users WHERE email = ?').get(email) as { id: number }).id;

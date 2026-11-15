@@ -5,12 +5,9 @@ services:
     # a named volume, so the folder belongs to the user the server runs as
     volumes: ["split-data:/app/data"]
     restart: unless-stopped
-    # mail for login codes; without these the code is printed in the server log
-    environment:
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      MAIL_FROM: ${MAIL_FROM:-}
+    # mail settings, TRUST_PROXY and every limit are read from .env (see .env.example); all are optional
+    env_file:
+      - path: .env
+        required: false
 volumes:
   split-data:

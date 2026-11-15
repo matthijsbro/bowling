@@ -12,9 +12,9 @@ test('a code signs you in once, and the session can be ended', async () => {
   const { db, sent, ask } = setup();
   expect(await ask(' Ann@Example.com ', 'ip1')).toBe('ok');
   expect(sent['ann@example.com']).toMatch(/^\d{6}$/);
-  const s = verifyCode(db, 'ann@example.com', sent['ann@example.com'], 2000)!;
+  const s = verifyCode(db, 'ann@example.com', sent['ann@example.com'], 2000, 'ip1') as { token: string; email: string };
   expect(s.email).toBe('ann@example.com');
-  expect(verifyCode(db, 'ann@example.com', sent['ann@example.com'], 2000)).toBeNull(); // a code works once
+  expect(verifyCode(db, 'ann@example.com', sent['ann@example.com'], 2000, 'ip1')).toBeNull(); // a code works once
   const user = userOf(db, s.token)!;
   expect(user).toBeGreaterThan(0);
   expect(userOf(db, 'not-a-token')).toBeUndefined();
@@ -26,10 +26,10 @@ test('wrong codes are refused, five wrong guesses kill the code, and codes expir
   const { db, sent, ask } = setup();
   await ask('bo@example.com', 'ip2');
   const right = sent['bo@example.com'], wrong = right === '000000' ? '111111' : '000000';
-  for (let i = 0; i < 5; i++) expect(verifyCode(db, 'bo@example.com', wrong, 2000)).toBeNull();
-  expect(verifyCode(db, 'bo@example.com', right, 2000)).toBeNull(); // too late: the code is dead
+  for (let i = 0; i < 5; i++) expect(verifyCode(db, 'bo@example.com', wrong, 2000, 'ip2')).toBeNull();
+  expect(verifyCode(db, 'bo@example.com', right, 2000, 'ip2')).toBeNull(); // too late: the code is dead
   await ask('cy@example.com', 'ip3');
-  expect(verifyCode(db, 'cy@example.com', sent['cy@example.com'], 1000 + 11 * 60e3)).toBeNull();
+  expect(verifyCode(db, 'cy@example.com', sent['cy@example.com'], 1000 + 11 * 60e3, 'ip3')).toBeNull();
 });
 
 test('asking too often is refused, per address and per caller; nonsense addresses are refused', async () => {
@@ -45,7 +45,7 @@ test('asking too often is refused, per address and per caller; nonsense addresse
 test('an account keeps its games and its remembered rules', async () => {
   const { db, sent, ask } = setup();
   await ask('flo@example.com', 'ip4');
-  const user = userOf(db, verifyCode(db, 'flo@example.com', sent['flo@example.com'], 2000)!.token)!;
+  const user = userOf(db, (verifyCode(db, 'flo@example.com', sent['flo@example.com'], 2000, 'ip4') as { token: string }).token)!;
   recordGame(db, user, { score: 41, frames: 5, mode: 'solo', title: 'Utilitarians, with a footnote' }, 3000);
   setRules(db, user, ['numbers:A', 42, 'x'.repeat(99), 'truth:B']);
   expect(profile(db, user)).toEqual({ email: 'flo@example.com', rules: ['numbers:A', 'truth:B'], games: [{ at: 3000, score: 41, frames: 5, mode: 'solo', title: 'Utilitarians, with a footnote' }] });

@@ -6,6 +6,7 @@ import nodemailer from 'nodemailer';
 import { WebSocketServer } from 'ws';
 import { profile, recordGame, requestCode, setRules, signOut, userOf, verifyCode } from './auth.ts';
 import { db } from './db.ts';
+import { LIMITS, ipOf } from './limits.ts';
 import { serve } from './rooms.ts';
 
 const DIST = resolve('dist');
@@ -43,13 +44,12 @@ async function api(req: IncomingMessage, res: ServerResponse, path: string) {
   if (req.method !== 'POST') return json(res, 404, { error: 'not found' });
   const b = await body(req);
   if (path === '/api/login/request') {
-    // behind a proxy the caller's address is in x-forwarded-for; without one it is the socket's
-    const ip = String(req.headers['x-forwarded-for'] ?? req.socket.remoteAddress ?? '').split(',')[0].trim();
-    const r = await requestCode(db(), b.email, ip, now, sendCode);
+    const r = await requestCode(db(), b.email, ipOf(req), now, sendCode);
     return r === 'ok' ? json(res, 200, { ok: true }) : json(res, r === 'too-many' ? 429 : 400, { error: r === 'too-many' ? 'Too many codes asked for. Try again in ten minutes.' : 'That does not look like an email address.' });
   }
   if (path === '/api/login/verify') {
-    const s = verifyCode(db(), b.email, b.code, now);
+    const s = verifyCode(db(), b.email, b.code, now, ipOf(req));
+    if (s === 'full') return json(res, 503, { error: 'No new accounts can be made right now. Try again tomorrow; you can play without one.' });
     if (!s) return json(res, 400, { error: 'That code is wrong or has expired.' });
     const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
     return json(res, 200, profile(db(), userOf(db(), s.token)!), { 'set-cookie': `sid=${s.token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=31536000${secure}` });
@@ -76,6 +76,18 @@ const http = createServer(async (req, res) => {
   }
   res.writeHead(404).end('not found');
 });
-// ponytail: no limit on how fast one address can create teams; add one before this faces the open internet
-new WebSocketServer({ server: http, path: '/ws', maxPayload: 4096 }).on('connection', (sock, req) => serve(sock, userOf(db(), cookie(req))));
+// game connections: a ceiling for the whole server and one per address, so one caller cannot fill it
+let open = 0;
+const perIp = new Map<string, number>();
+new WebSocketServer({ server: http, path: '/ws', maxPayload: 4096 }).on('connection', (sock, req) => {
+  const ip = ipOf(req), mine = perIp.get(ip) ?? 0;
+  const full = LIMITS.MAX_CONNECTIONS && open >= LIMITS.MAX_CONNECTIONS, greedy = LIMITS.MAX_CONNECTIONS_PER_IP && mine >= LIMITS.MAX_CONNECTIONS_PER_IP;
+  if (full || greedy) {
+    sock.send(JSON.stringify({ t: 'error', msg: full ? 'The alley is full right now. Try again in a little while, or play on this device.' : 'Too many connections from your network. Close a few tabs and try again.' }));
+    return sock.close(1013, 'busy'); // 1013: try again later
+  }
+  open++; perIp.set(ip, mine + 1);
+  sock.on('close', () => { open--; const n = (perIp.get(ip) ?? 1) - 1; if (n) perIp.set(ip, n); else perIp.delete(ip); });
+  serve(sock, userOf(db(), cookie(req)), ip);
+});
 http.listen(Number(process.env.PORT ?? 8080), () => console.log(`Split Decision server up${mailer ? '' : ' (no SMTP: login codes are printed in this log)'}`));
