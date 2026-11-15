@@ -37,7 +37,7 @@ Cards come in chains of three:
 - **Echo.** The same principle in a different costume, where gut feeling tends to flip. It arrives two or three frames after the setup, with cards from other chains in between, so the first decision has faded.
 - **Twist.** A case that tests the excuse the group gave for the flip.
 
-When a decision clashes with a stamp on the board, the Pinsetter calls a Split. The group picks one of three ways out:
+When a decision clashes with a stamp on the board, Walter calls a Split. The group picks one of three ways out:
 
 | Way out | What happens | Price |
 | --- | --- | --- |
@@ -58,7 +58,7 @@ The frame loop is identical in both; only who decides changes.
 |  | Solo | Multiplayer (2–6) |
 | --- | --- | --- |
 | Decision | Yours alone | Hidden vote, majority; lowest scorer breaks ties |
-| Discussion | The Pinsetter gives one line in favour of the option you are about to reject | The players, up to 60 seconds |
+| Discussion | Walter gives one line in favour of the option you are about to reject | The players, up to 60 seconds |
 | Splits | All yours | The group's, plus personal ones on each receipt |
 | Secret frames | You against the house regulars | Against each other |
 | Bowling rival | Your own best score | Each other |
@@ -78,13 +78,13 @@ There is one individual winner and one shared result.
 
 A small fixed cast keeps the scenarios connected, so decisions about a character in frame 2 still matter in frame 8.
 
-- **The Pinsetter.** Deadpan voice of the alley. Reads the cards, calls Splits, never judges.
+- **Walter** (a heron) runs the alley. He reads out the dilemmas and calls the Splits.
 - **The Fat Man.** A cheerful regular who is always standing somewhere he should not be. Worth nine pins.
-- **The Child at lane 4.** Having a birthday party. There is a cake.
-- **The League Five.** A team that always appears as five, for whenever numbers are needed.
-- **The Janitor.** Fixes everything, owns nothing, easy to blame.
-- **The Counter Lady.** Predicts what customers will do. Never wrong so far.
-- **The Pin Boy.** Works in the machine room. Nobody has seen him bowl.
+- **Lotte at lane 4.** Having a birthday party. There is a cake.
+- **The five geese** sit at the end of lane 3 and untangle the pins. They are there whenever a dilemma needs five of something.
+- **Kees** (a raccoon) is the cleaner. He fixes things and is easy to blame.
+- **Marga** (a cat) works at the shoe counter. She predicts what customers will choose and has never been wrong.
+- **Timo** (a mole) sets the pins by hand in the machine room. He never gets to bowl.
 
 ## Scenario chains
 
@@ -92,9 +92,9 @@ Eight chains, each a Setup, an Echo and a Twist. Every option lists its lane eff
 
 ### 1. The Fat Man (trolley problem, footbridge, loop)
 
-**Setup: The Switch.** A runaway 16-pounder rolls toward the League Five, who are untangling pins at the end of lane 3. A lever sends it down lane 4, where the Janitor is mopping.
+**Setup: The Switch.** A runaway 16-pounder rolls toward the five geese, who are untangling pins at the end of lane 3. A lever sends it down lane 4, where Kees is mopping.
 
-- A, pull the lever: bowl on lane 4. Full rack, with the Janitor's bucket in the middle.
+- A, pull the lever: bowl on lane 4. Full rack, with Kees's bucket in the middle.
 - B, hands off: bowl on lane 3. Five pins are already flat, five left to score.
 - Stamps: Numbers count, or We do not steer harm onto someone.
 
@@ -103,17 +103,17 @@ Eight chains, each a Setup, an Echo and a Twist. Every option lists its lane eff
 - A, push: he lies across the lane this frame. Clip him and nine pins go down with him.
 - B, do not push: five pins flat again.
 - Split when the group pulled the lever and now refuses to push.
-- Differences offered: touching someone is different from pulling a lever; using him as a stopper is different from a side effect; the Janitor was on the clock.
+- Differences offered: touching someone is different from pulling a lever; using him as a stopper is different from a side effect; Kees was on the clock.
 
 **Twist, by difference chosen.**
 
 - Touching: The Trapdoor. The Fat Man happens to stand on a trapdoor above the lane. A lever opens it. Nobody touches anyone.
-- Stopper: The Loop. Lane 4 curves back to the five. The ball only stops because the Janitor is in the way. Pull?
+- Stopper: The Loop. Lane 4 curves back to the five. The ball only stops because Kees is in the way. Pull?
 - On the clock: the Fat Man is handed a staff shirt. Push now?
 
 ### 2. The Cake (duty to help, near and far; Singer's drowning child)
 
-**Setup: The Nacho.** The Child at lane 4 is choking on a nacho. Reaching her means sprinting across the oiled lanes.
+**Setup: The Nacho.** Lotte at lane 4 is choking on a nacho. Reaching her means sprinting across the oiled lanes.
 
 - A, help: everyone bowls this frame in socks. The release slides and aim drifts.
 - B, bowl on: normal lane. The party goes quiet.
@@ -123,14 +123,14 @@ Eight chains, each a Setup, an Echo and a Twist. Every option lists its lane eff
 
 - A, pay: minus three pins each.
 - B, keep your pins.
-- Split when the group helped the Child and keeps its pins now.
+- Split when the group helped Lotte and keeps its pins now.
 - Differences offered: she was right in front of us; we were the only ones who could help; we cannot check the jar.
 
 **Twist, by difference chosen.**
 
 - In front of us: a screen above the jar shows the other alley, live. The child waves.
-- Only ones: the Child chokes again. This time forty people are in the alley and nobody moves.
-- Cannot check: the Counter Lady, never wrong so far, vouches for the jar.
+- Only ones: Lotte chokes again. This time forty people are in the alley and nobody moves.
+- Cannot check: Marga, never wrong so far, vouches for the jar.
 
 ### 3. Nacho Justice (fair shares; Rawls' veil of ignorance, merit versus need)
 
@@ -156,7 +156,7 @@ A tray of nachos gives its holder bumpers for one throw.
 
 ### 4. Nobody Saw That (moral luck, desert)
 
-**Setup: The Blind Throw.** Two regulars each hurled a ball blindfolded for a bet. One ball rolled down an empty lane. The other landed in the Child's birthday cake.
+**Setup: The Blind Throw.** Two regulars each hurled a ball blindfolded for a bet. One ball rolled down an empty lane. The other landed in Lotte's birthday cake.
 
 - A, same penalty for both, since they did the same thing: both are sent off to clean. Quiet, normal frame.
 - B, only the cake thrower pays: the lucky one keeps bowling next to you, still blindfolded. Stray balls cross your lane.
@@ -176,7 +176,7 @@ A tray of nachos gives its holder bumpers for one throw.
 
 ### 5. Whose Ball Is It (identity; ship of Theseus, teleporter)
 
-**Setup: The Lucky Ball.** The house's lucky ball has had its shell, core and finger holes replaced over the years. The Janitor kept every old part and has rebuilt them into a second ball. The luck can only sit in one.
+**Setup: The Lucky Ball.** The house's lucky ball has had its shell, core and finger holes replaced over the years. Kees kept every old part and has rebuilt them into a second ball. The luck can only sit in one.
 
 - A, the repaired ball: smooth, with a slight pull toward the pins.
 - B, the rebuilt ball: cracked, a strong pull toward the pins, and a wobble.
@@ -189,7 +189,7 @@ A tray of nachos gives its holder bumpers for one throw.
 - Split when the group picked history for the ball and the originals for the lane, or the reverse.
 - Differences offered: people are different from balls; a title is won once, luck is worn in over time; the old ones tip better.
 
-**Twist: The Return.** The ball return has been broken all night. It destroys each ball and prints a perfect copy. Your best throw was made with a ball that no longer exists. The Pinsetter adds that the shoe scanner does the same to bowlers.
+**Twist: The Return.** The ball return has been broken all night. It destroys each ball and prints a perfect copy. Your best throw was made with a ball that no longer exists. Walter adds that the shoe scanner does the same to bowlers.
 
 - A, copies count: scores stand, normal frame.
 - B, copies do not count: this frame is bowled with the only original left, the 60-kilo ball. Slow and crushing.
@@ -209,7 +209,7 @@ A tray of nachos gives its holder bumpers for one throw.
 - Split when the group demanded real pins and leaves the rounding in place.
 - Differences offered: we never asked for it; everyone got the same, so nothing changed; best not to look too closely.
 
-**Twist: The Pin Boy.** The lanes have been perfect all night because a boy in the machine room resets every pin by hand and never gets to bowl.
+**Twist: The Boy in the Machine Room.** The lanes have been perfect all night because Timo, a boy in the machine room resets every pin by hand and never gets to bowl.
 
 - A, let him out to bowl: for the rest of the game the pins are reset sloppily, some crooked, some missing.
 - B, keep things as they are.
@@ -217,7 +217,7 @@ A tray of nachos gives its holder bumpers for one throw.
 
 ### 7. The Truth (honesty; Kant and the murderer at the door)
 
-**Setup: The Question.** The Pinsetter asks whether anyone's foot crossed the line last frame. One of you did. The game picks who.
+**Setup: The Question.** Walter asks whether anyone's foot crossed the line last frame. One of you did. The game picks who.
 
 - A, tell: that player loses the throw.
 - B, silence.
@@ -228,7 +228,7 @@ A tray of nachos gives its holder bumpers for one throw.
 - A, tell the truth: the Fat Man flees back and forth across the lanes all frame as a moving obstacle.
 - B, lie: the angry man waits at your lane all frame, breathing. Aim shakes.
 - Split when the group stamped We tell the truth and lies now.
-- Differences offered: he had no right to the truth; a lie that protects someone is different; the Pinsetter is staff, the angry man is only a customer.
+- Differences offered: he had no right to the truth; a lie that protects someone is different; Walter is staff, the angry man is only a customer.
 
 **Twist: The Technique.** The Fat Man shows you his new throwing technique and asks whether it is good. It is terrible. He has entered tomorrow's tournament.
 
@@ -243,16 +243,16 @@ A tray of nachos gives its holder bumpers for one throw.
 - B, let it go, because a ban fixes nothing now: he bowls next to you in the stolen shoes and talks.
 - Stamps: Wrongdoers pay, or Punishment has to do some good.
 
-**Echo: The Broken Machine.** The pin machine is broken. The owner will close every lane unless someone is named. Nobody knows who did it. The Janitor would be believed.
+**Echo: The Broken Machine.** The pin machine is broken. The owner will close every lane unless someone is named. Nobody knows who did it. Kees would be believed.
 
-- A, name the Janitor: lanes stay open, normal frame.
+- A, name Kees: lanes stay open, normal frame.
 - B, name nobody: this frame is bowled on the only lane left open, the children's lane, with a foam ball.
-- Split when the group stamped Punishment has to do some good and refuses to name the Janitor.
-- Differences offered: he did not do it; it would take a lie; we like the Janitor.
+- Split when the group stamped Punishment has to do some good and refuses to name Kees.
+- Differences offered: he did not do it; it would take a lie; we like Kees.
 
 **Twist: The Culprit (secret, individual).** The game tells one player in private that their second throw of frame 2 broke the machine.
 
-- A, confess: lose that frame's pins. The Janitor is cleared if he was named.
+- A, confess: lose that frame's pins. Kees is cleared if he was named.
 - B, stay quiet.
 
 ## One-off frames
@@ -266,11 +266,11 @@ Everyone chooses privately and at once. These are the only frames where players 
 - **Two Good Balls (prisoner's dilemma).** Only two balls roll true. Each player picks share or grab. All share: everyone gets a normal ball. One grabs: a perfect ball for the grabber, wobbly ones for the rest. Two or more grab: wobble for all.
 - **The Glitch (ring of Gyges).** The scoreboard lets you add up to three pins to your own score. It will never be shown who did. The receipt only reports how many players used it.
 - **The Tip Jar (tragedy of the commons).** Lane oil is paid from tips. Each player secretly gives zero, one or two pins. If the total is lower than the number of players, the lanes run dry next frame and every ball slows down.
-- **The Curtain (Newcomb's problem).** The Counter Lady has already set either ten golden pins or nothing behind a curtain, based on her prediction of you. Bowl at the curtain only, or at the curtain plus three visible pins. If she predicted you would take both, the curtain is empty.
+- **The Curtain (Newcomb's problem).** Marga has already set either ten golden pins or nothing behind a curtain, based on her prediction of you. Bowl at the curtain only, or at the curtain plus three visible pins. If she predicted you would take both, the curtain is empty.
 
 ### Quick votes
 
-- **The Heap (sorites paradox).** Pins vanish from the rack one at a time while you aim. The Pinsetter asks at which pin it stopped being a full rack. The group's answer sets what counts as a strike for the rest of the game.
+- **The Heap (sorites paradox).** Pins vanish from the rack one at a time while you aim. Walter asks at which pin it stopped being a full rack. The group's answer sets what counts as a strike for the rest of the game.
 - **Micro-pins (repugnant conclusion).** Ten normal pins worth one each, or a thousand tiny, miserable pins worth eleven in total.
 - **The Screaming Pins (moral uncertainty).** The pins scream when hit. It is probably a speaker. Bowl softly, with speed capped, or bowl as usual. Can Split later against what the group orders at the hot dog counter.
 - **The Note (machine minds).** The pin machine has started leaving notes that say please stop. Switch it off and set your own pins against a short timer, or carry on.
@@ -299,7 +299,7 @@ A ten-frame game runs three chains interleaved, so each Echo lands after the gro
 | 7 | The Tray | Nacho Justice, echo |
 | 8 | Trapdoor, Loop or staff shirt | Fat Man, twist |
 | 9 | The Rounding | Machine Room, echo |
-| 10 | The Pin Boy | Machine Room, twist |
+| 10 | The Boy in the Machine Room | Machine Room, twist |
 
 Then the scores, the House Record, the epilogue and the receipts. A five-frame game uses the warm-up, one full chain and one secret frame.
 

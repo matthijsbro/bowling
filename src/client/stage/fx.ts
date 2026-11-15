@@ -30,7 +30,7 @@ export function burst(kind: Fx, x: number, y: number, z = 0.7, amount = 1) {
   }
   if (parts.length > 700) parts = parts.slice(-700);
 }
-/** New frame, clean lane. The Janitor is very good. */
+/** New frame, clean lane. Kees has cleaned it. */
 export const clearFx = () => { parts = []; };
 
 type Pt = [number, number];

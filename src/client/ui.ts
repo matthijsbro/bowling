@@ -2,6 +2,7 @@
 import { isMuted } from './audio.ts';
 import { pinsetter } from './cast/cast.ts';
 import type { Account, Room } from './net.ts';
+import { CARDS } from '../shared/cards/index.ts';
 import { RULES } from '../shared/cards/rules.ts';
 import { cardOf, frameDone, reasonsFor, summary, type View } from '../shared/engine.ts';
 
@@ -21,8 +22,8 @@ export type Ui = {
   remembered: string[];                         // rules the alley remembers of you alone
 };
 
-/** What the Pinsetter is doing while you look at the title. */
-export const QUIPS = ['The Pinsetter is counting the pins. Again.', 'The lanes have been oiled. Nobody will say with what.', 'Tonight: bowling. Also consequences.', 'The pigeon has been informed of your arrival.', 'Shoes are optional. Opinions are not.', 'The vending machine is confident about tomorrow.', 'All pins present. One of them is nervous.'];
+/** One line under the title, picked at random. */
+export const QUIPS = ['A bowling game in which every frame starts with a decision.', 'Walter, the heron who runs the alley, is setting up the pins.', 'Every decision you make goes on the board as a house rule.', 'If you go against one of your own house rules, the alley calls a Split.'];
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
 const face = `<div class="who"><svg viewBox="84 0 118 118" class="ink">${pinsetter('calm')}</svg></div>`;
@@ -33,8 +34,6 @@ const lengths = (act: string) => `<button class="go" data-act="${act}" data-len=
   <button class="go" data-act="${act}" data-len="10">Full game, ten frames</button>`;
 const back = `<button data-act="home"><small>Back to the start</small></button>`;
 const mute = () => `<button class="mute" data-act="mute" aria-pressed="${isMuted()}"><small>Sound: ${isMuted() ? 'off' : 'on'}</small></button>`;
-// asked for, written down nowhere
-const shoes = `<input maxlength="4" inputmode="numeric" placeholder="Shoe size (the alley does not use this)" aria-label="Shoe size. The alley does not use this.">`;
 
 const title = (u: Ui) => `<div class="title home">
   <div><h1><span>SPLIT</span><span>DECISION</span></h1><p class="quip">${u.quip}</p></div>
@@ -49,18 +48,18 @@ const title = (u: Ui) => `<div class="title home">
   ${u.serverUp ? `<button class="go alt" data-act="online">With friends, each on their own phone</button>` : ''}
   ${u.remembered.length ? `<p class="remember">The alley remembers you: ${u.remembered.map((c) => `<span class="stamp">${RULES[c] ?? c}</span>`).join(' ')} <button data-act="forget"><small>Wipe the board</small></button></p>` : ''}
   ${u.serverUp ? `<button data-act="account"><small>${u.account ? `Signed in as ${esc(u.account.email)}` : 'Sign in, if you like. Nothing needs it.'}</small></button>` : ''}
-  <small>${u.best ? `Your best quick game alone: ${u.best} pins. It is watching.` : 'Playing alone stays on this device. Nothing leaves it.'}</small>${mute()}</div>
+  <small>${u.best ? `Your best quick game alone: ${u.best} pins.` : 'Playing alone stays on this device. Nothing leaves it.'}</small>${mute()}</div>
 </div>`;
 
 const names = (u: Ui) => `<div class="title"><div class="rules">
   <h2>Who is bowling?</h2><small>Two to six names. You pass the device round for secret votes and for bowling.</small>
   ${Array.from({ length: 6 }, (_, i) => `<input name="n" maxlength="20" placeholder="Bowler ${i + 1}" value="${esc(u.names[i] ?? '')}" aria-label="Name of bowler ${i + 1}">`).join('')}
-  ${shoes}${u.error ? `<p class="error">${esc(u.error)}</p>` : ''}
+  ${u.error ? `<p class="error">${esc(u.error)}</p>` : ''}
   ${lengths('startPass')}${back}</div></div>`;
 
 const online = (u: Ui) => `<div class="title"><div class="rules">
   <h2>Play online</h2><small>Everyone joins the same team, each on their own phone or computer. No account needed.</small>
-  <input id="name" maxlength="20" placeholder="Your name" value="${esc(u.name)}" aria-label="Your name">${shoes}
+  <input id="name" maxlength="20" placeholder="Your name" value="${esc(u.name)}" aria-label="Your name">
   <button class="go" data-act="create">Start a new team</button>
   <input id="team" maxlength="6" placeholder="Team id, six characters" value="${esc(u.team)}" aria-label="Team id" autocapitalize="characters">
   <button class="go" data-act="join">Join that team</button>
@@ -104,11 +103,9 @@ function hud(g: View, u: Ui) {
 
 function card(g: View, u: Ui) {
   const c = cardOf(g), many = multi(g), secret = c.kind === 'secret';
-  const ex = c.role === 'twist' && c.chain ? g.explained[c.chain] : undefined;
-  const tests = ex ? `<p>At the Split you gave this reason: <span class="stamp why">${g.stamps[ex.stamp].text}</span> This dilemma checks whether you stand by it.</p>` : '';
   const head = `<div class="panel">${face}<h2>${c.title}</h2>`;
   // one thing at a time, so the panel stays small and the scene stays visible
-  if (!u.read) return `${head}<p>${c.text}</p>${tests}${many
+  if (!u.read) return `${head}<p>${c.text}</p>${many
     ? `<p><b>${secret ? 'No talking. Everyone chooses in private.' : 'Talk it over. Then everyone votes in private, and the majority decides.'}</b></p>${secret ? '' : '<div class="talk"><i></i></div>'}
        <button class="go" data-act="read">${secret ? 'Start choosing' : 'We are ready to vote'}</button>`
     : `<button class="go" data-act="read">What can I do?</button>`}</div>`;
@@ -119,10 +116,20 @@ function card(g: View, u: Ui) {
     <button data-act="unread"><small>Read the problem again</small></button></div></div>`;
 }
 
+/** Where a rule on the board came from, in a full sentence, because players forget earlier frames. */
+function earlier(g: View, s: View['stamps'][number]) {
+  const log = g.log[s.frame], c = log && CARDS[log.card], chose = c?.options.find((o) => o.id === log.decision);
+  if (s.old) return 'The alley remembers this rule from an earlier night:';
+  if (s.why) return `At an earlier Split, in <b>${c.title}</b>, ${multi(g) ? 'the group' : 'you'} gave a reason, and it became this rule:`;
+  if (s.back) return `At an earlier Split, in <b>${c.title}</b>, ${multi(g) ? 'the group' : 'you'} took a rule back, and this rule replaced it:`;
+  return `Earlier tonight, in <b>${c.title}</b>, ${multi(g) ? 'the group' : 'you'} chose <b>${chose?.label}</b>. That put this rule on the board:`;
+}
+
 function split(g: View, u: Ui) {
   const c = cardOf(g), old = g.stamps[g.splitAgainst!], now = c.options.find((o) => o.id === g.decision)!, reasons = reasonsFor(g);
   return `<div class="panel">${face}<h2 class="splitword">SPLIT!</h2>
-    <p>${old.old ? 'A rule the alley remembers from an earlier night' : 'An earlier rule on the board'}: <span class="stamp ${old.why ? 'why' : ''}">${old.text}</span> Now ${multi(g) ? 'the group' : 'you'} chose <b>${now.label}</b>, which goes against that rule. The alley calls this a Split.</p>${u.explaining
+    <p>${earlier(g, old)} <span class="stamp ${old.why ? 'why' : ''}">${old.text}</span></p>
+    <p>Now ${multi(g) ? 'the group' : 'you'} chose <b>${now.label}</b>. That goes against this rule, so the alley calls a Split.</p>${u.explaining
     ? `<p>Why is this case different? Pick the reason closest to yours. It becomes a rule on the board, and later choices can go against it too.</p><div class="opts">${reasons.map((d, i) => `<button data-act="diff" data-i="${i}"><b>${d.text}</b></button>`).join('')}
        <button data-act="back"><small>Back to the ways out</small></button></div>`
     : `<p>${multi(g) ? 'Decide together what to do about it.' : 'What do you want to do about it?'}</p><div class="opts">
@@ -137,7 +144,7 @@ function bowlStrip(g: View, u: Ui) {
   const bits = [multi(g) && u.mode === 'pass' ? `${nameOf(g, u.me)} bowls.` : '',
     c.options.find((o) => o.id === (g.decision ?? g.votes[u.me]))?.effect ?? (c.kind === 'plain' ? c.text : ''),
     lane?.ball === 'wobble' ? 'You have a wobbly ball: it swerves left and right.' : lane?.ball === 'perfect' ? 'You have a perfect ball: it steers itself towards the pins.' : '',
-    g.dry ? 'The lanes are dry, so every ball is slow.' : '', g.sloppy ? 'The Pin Boy is out: two pins are missing.' : '', g.strikeAt < 10 ? `${g.strikeAt} or more pins counts as ten.` : '',
+    g.dry ? 'The lanes are dry, so every ball is slow.' : '', g.sloppy ? 'Timo has left the machine room, so two pins are missing from every rack.' : '', g.strikeAt < 10 ? `${g.strikeAt} or more pins counts as ten.` : '',
     lane?.bumpers ? 'Bumpers are up, so the ball cannot fall in the gutter.' : '', g.sevenTen ? 'Only the two corner pins are set up, because of the shrug at the Split.' : ''].filter(Boolean);
   return bits.length ? `<div class="chip strip">${esc(bits.join(' '))}</div>` : '';
 }
@@ -168,12 +175,12 @@ function end(g: View, u: Ui) {
     : u.room?.you === 0 ? lengths('startOnline') : `<p>Waiting for ${esc(u.room?.members[0].name ?? 'the host')} to start another game.</p>`;
   return `<div class="end"><div><h1>Closing time</h1>
     ${multi(g) ? `<p class="big">The night's winner: ${esc(ranked[0].name)}</p>${ranked.map((p) => `<p><b>${esc(p.name)}</b> ${p.score} pins &nbsp;<small style="display:inline">${p.frames.join(' + ')}</small></p>`).join('')}`
-      : `<p class="big">${ranked[0].score} pins</p><p>${ranked[0].frames.join(' + ')}${g.length === 5 && u.best && ranked[0].score >= u.best ? ' &mdash; a new best. The old one has been told.' : ''}</p>`}
+      : `<p class="big">${ranked[0].score} pins</p><p>${ranked[0].frames.join(' + ')}${g.length === 5 && u.best && ranked[0].score >= u.best ? ' &mdash; a new best.' : ''}</p>`}
     <h2>The House Record</h2><p class="big">${s.title}</p>
     <p>Splits explained: ${r.explained}${r.explained ? ` (stood by in a twist: ${r.survived})` : ''} &middot; taken back: ${r.takenBack} &middot; shrugged: ${r.shrugged}</p>
-    <p>${stamps(g) || 'The board is empty. That is also a position.'}</p>
+    <p>${stamps(g) || 'The board is empty: no rules were made tonight.'}</p>
     <h2>What became of everyone</h2>${s.epilogue.map((l) => `<p>${l}</p>`).join('')}
-    <h2>${multi(g) ? 'Receipts' : 'Your receipt'}</h2>${s.receipts.map((p) => `<div class="receipt"><p><b>${esc(p.name)}: ${p.title}</b></p>${p.lines.map((l) => `<p>${l}</p>`).join('')}<p>Thank you for bowling. No refunds on principles.</p></div>`).join('')}
+    <h2>${multi(g) ? 'Receipts' : 'Your receipt'}</h2>${s.receipts.map((p) => `<div class="receipt"><p><b>${esc(p.name)}: ${p.title}</b></p>${p.lines.map((l) => `<p>${l}</p>`).join('')}<p>Thank you for bowling.</p></div>`).join('')}
     <details><summary>What these dilemmas were about</summary>${s.review.map((x) => `<p><b>${x.title}.</b> ${x.about}</p>`).join('')}</details>
     ${again}${back}</div></div>`;
 }

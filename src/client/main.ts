@@ -198,14 +198,14 @@ function throwBall(t: Throw) {
 function landed(s: Sim, t: Throw) {
   const before = s.lane.standing.filter(Boolean).length, left = standingAfter(s).filter(Boolean).length, hit = before - left;
   const first = myBowl()!.throws === 0;
-  u.note = s.fatmanHit ? 'NINE. He is not fine.' : left === 0 && hit ? (first ? 'STRIKE!' : 'spare!') : hit === 0 ? 'nothing. the pins are relieved.' : `${hit} down`;
+  u.note = s.fatmanHit ? 'Nine pins. You hit the Fat Man.' : left === 0 && hit ? (first ? 'STRIKE!' : 'spare!') : hit === 0 ? 'No pins.' : `${hit} down`;
   rollStop();
   if (left === 0 && hit) {
     // one strike in five, the confetti cannon lets everyone down
-    if (first && Math.random() < 0.2) { burst('confetti', 0, LANE.length, 1, 0.04); sfx.pfft(); u.note += ' (the confetti cannon is being looked at)'; }
+    if (first && Math.random() < 0.2) { burst('confetti', 0, LANE.length, 1, 0.04); sfx.pfft(); u.note += ' The confetti cannon misfired.'; }
     else { burst('confetti', 0, LANE.length, 1, first ? 2 : 1); burst('stars', 0, LANE.length, 1.2); (first ? sfx.strike : sfx.spare)(); }
   } else if (hit === 0 && !s.fatmanHit) sfx.trombone();
-  if (quirks.golden >= 0 && s.lane.standing[quirks.golden] && !standingAfter(s)[quirks.golden]) u.note += ' The golden pin! Worth exactly one pin.';
+  if (quirks.golden >= 0 && s.lane.standing[quirks.golden] && !standingAfter(s)[quirks.golden]) u.note += ' You hit the golden pin. It counts as one pin, like the others.';
   sim = null;
   busyUntil = performance.now() + 1100;
   const who = u.me;
@@ -225,19 +225,19 @@ function mess(s: Sim) {
   }
 }
 
-// --- nonsense: none of this does anything
+// --- tap a character or object to hear it speak; this has no effect on the game
 const SAYS: Record<string, [() => void, string[]]> = {
-  vending: [sfx.clunk, ['Sold out.', 'It takes your coin thoughtfully.', 'Out of order since 1987.', 'The snacks are thinking about it.', 'Exact change only. No change is exact.']],
-  pigeon: [sfx.flap, ['!', 'coo', 'It was just leaving.']],
-  five: [sfx.honk, ['HONK.', 'Honk?', '(the pin says nothing)']], oldFive: [sfx.honk, ['In 1987 this was all lanes.', 'honk, slowly']],
-  fat: [sfx.crunch, ['Nacho?', 'I am standing here on purpose.', 'Is this a bad spot?']],
-  janitor: [sfx.squeak, ['Mind the floor.', 'Gerald says hello.', 'I just mopped that.']],
-  child: [sfx.squeak, ['It is my birthday.', 'I have a fork.']],
-  pinsetter: [sfx.blip, ['I do not judge.', 'That was a tap.', 'Noted.']],
-  lady: [sfx.blip, ['I knew you would do that.', 'No.']],
-  pinBoy: [sfx.clunk, ['...', 'please']], angry: [sfx.gutter, ['WHERE IS HE.', 'GRR.']], thief: [sfx.squeak, ['These? I found them.', 'They are comfortable, though.']],
-  jar: [sfx.clang, ['clink']], curtain: [sfx.pfft, ['You may not look.']], cake: [sfx.splat, ['squish']], tray: [sfx.crunch, ['crunch']],
-  board: [sfx.blip, ['The number on this board is fine.']], goodBall: [sfx.clang, ['It hums.']], ball: [sfx.gutter, ['It is not sorry.']], lever: [sfx.clunk, ['Not yet.']],
+  vending: [sfx.clunk, ['Sold out.', 'Out of order.', 'The machine keeps your coin.']],
+  pigeon: [sfx.flap, ['coo', 'The pigeon walks away.']],
+  five: [sfx.honk, ['HONK.', 'Honk?']], oldFive: [sfx.honk, ['We won the championship here in 1987.', 'honk']],
+  fat: [sfx.crunch, ['Would you like a nacho?', 'Am I in the way here?']],
+  janitor: [sfx.squeak, ['I am Kees, the cleaner.', 'Careful, the floor is wet.', 'I just mopped there.']],
+  child: [sfx.squeak, ['I am Lotte. It is my birthday today.', 'Would you like some cake?']],
+  pinsetter: [sfx.blip, ['I am Walter. I run this alley.', 'Drag back and flick to bowl.']],
+  lady: [sfx.blip, ['I am Marga. I work at the shoe counter.', 'I knew you would tap me.']],
+  pinBoy: [sfx.clunk, ['I am Timo. I set the pins.', 'I would like to bowl one day.']], angry: [sfx.gutter, ['WHERE IS HE?']], thief: [sfx.squeak, ['I am Ruud.', 'I am sorry about the shoes.']],
+  jar: [sfx.clang, ['clink']], curtain: [sfx.pfft, ['You may not look behind the curtain.']], cake: [sfx.splat, ['squish']], tray: [sfx.crunch, ['crunch']],
+  board: [sfx.blip, ['This is the scoreboard.']], goodBall: [sfx.clang, ['This ball rolls straight.']], ball: [sfx.gutter, ['The ball keeps rolling.']], lever: [sfx.clunk, ['The lever does not move yet.']],
 };
 function tap(x: number, y: number) {
   const what = hitNonsense(view, x, y, performance.now()) ?? (inScene() || u.screen !== 'game' ? poke(x, y) : null);

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest';
 import { CARDS, CHAIN_IDS, FILLERS, inChain } from './cards/index.ts';
-import { RULES } from './cards/rules.ts';
+import { EXCEPTIONS, RULES, opposite } from './cards/rules.ts';
 import { cardOf, newGame, reasonsFor, step, summary, toRemember, type Ev, type Game } from './engine.ts';
 import type { OptionId } from './types.ts';
 
@@ -31,7 +31,7 @@ test('lever, then no push: Split, explained, tested by the matching twist, bumpe
   g = bowl(g);
   expect(g.phase).toBe('end');
   expect(g.record).toEqual({ explained: 1, survived: 1, takenBack: 0, shrugged: 0 });
-  expect(summary(g).title).toBe('Utilitarians, with a footnote');
+  expect(summary(g).title).toBe('Utilitarians, who explained one Split');
   expect(summary(g).receipts[0].title).toBe('The Flip');
 });
 
@@ -46,7 +46,7 @@ test('shrug: 7-10 next frame, and that rule binds nobody afterwards; take it bac
   const toSplit = () => vote(bowl(vote(game(['switch', 'fatman', 'micro']), 'A')), 'B');
   let g = bowl(step(toSplit(), { t: 'split', way: 'shrug' }));
   expect(g.sevenTen).toBe(true);
-  expect(summary(g).title).toBe('Utilitarians until nachos are involved');
+  expect(summary(g).title).toBe('Utilitarians, except when they would have to push someone');
   g = step(toSplit(), { t: 'split', way: 'takeBack' });
   expect(rules(g)).toEqual(['We do not steer harm onto someone', 'Nobody gets used as a tool']);
   // having taken it back, picking the thousand tiny pins ("Numbers count") is the next Split
@@ -57,17 +57,17 @@ test('rules clash across chains, and the honest reason comes back to bite', () =
   let g = vote(game(['switch', 'hungry', 'nacho']), 'A'); // Numbers count
   g = vote(bowl(g), 'B'); // ...but the Fat Man does not get every tray
   expect([g.phase, g.stamps[g.splitAgainst!].text]).toEqual(['split', 'Numbers count']);
-  expect(reasonsFor(g).map((d) => d.says)).toEqual(['self:A']); // no built-in excuse here: only the honest one
-  g = step(g, { t: 'split', way: 'explain', diff: 0 });
+  expect(reasonsFor(g).map((d) => d.says)).toEqual(['tool:A', 'share:A', 'self:A']); // no card reasons here: the general ones for the rule, then the honest one
+  g = step(g, { t: 'split', way: 'explain', diff: 2 });
   expect(rules(g)).toEqual(['Numbers count', 'We do what suits us']);
-  g = vote(bowl(g), 'A'); // helping the Child costs pins: that does not suit us
+  g = vote(bowl(g), 'A'); // helping Lotte costs pins: that does not suit us
   expect([g.phase, g.stamps[g.splitAgainst!].text]).toEqual(['split', 'We do what suits us']);
-  expect(reasonsFor(g)).toEqual([]);
+  expect(reasonsFor(g).map((d) => d.says)).toEqual(['matter:A', 'golden:A']);
   g = step(g, { t: 'split', way: 'takeBack' });
   expect(rules(g)).toEqual(['Numbers count', 'When it costs little, you help']);
 });
 
-test('naming the Janitor goes against four different rules', () => {
+test('naming Kees the cleaner goes against four different rules', () => {
   const o = CARDS.machine.options[0];
   expect(o.breaks).toEqual(['truth:A', 'tool:A', 'numbers:B', 'guilt:A']);
   const g = vote(bowl(vote(game(['question', 'machine']), 'A')), 'A'); // We tell the truth, then name an innocent man
@@ -166,4 +166,15 @@ test('the alley remembers: last night\'s rule can cause a Split tonight', () => 
   expect(g.stamps.map((s) => [s.text, s.old])).toEqual([['Numbers count', true]]);
   g = vote(g, 'B');
   expect([g.phase, g.stamps[g.splitAgainst!].old]).toEqual(['split', true]);
+});
+
+test('every rule a choice can go against offers at least two reasons at a Split', () => {
+  const clashable = new Set(['self:A']);
+  for (const c of Object.values(CARDS)) for (const o of c.options) for (const x of [o.says && opposite(o.says), ...(o.breaks ?? [])]) if (x) clashable.add(x);
+  for (const claim of clashable) {
+    const g = newGame(1, ['You'], { cards: ['warmup'], remembered: [claim] });
+    Object.assign(g, { phase: 'split', splitAgainst: 0 });
+    expect(reasonsFor(g).length, claim).toBeGreaterThanOrEqual(2);
+  }
+  for (const d of Object.values(EXCEPTIONS).flat()) expect(RULES[d.says], d.says).toBeDefined();
 });

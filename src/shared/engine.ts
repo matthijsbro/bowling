@@ -6,11 +6,12 @@
 // anything in its `breaks` list, or, for a choice that costs pins, "We do what suits us".
 // A clash is a Split. Reasons given at a Split become rules too, so they can be broken later.
 import { CARDS, CHAIN_IDS, FILLERS, inChain } from './cards/index.ts';
-import { PEOPLE, RULES, opposite } from './cards/rules.ts';
+import { EXCEPTIONS, PEOPLE, RULES, opposite } from './cards/rules.ts';
 import { fullRack, runThrow, type Lane, type Throw } from './sim.ts';
 import type { Card, Claim, LaneMod, Option, OptionId, ScoreMod } from './types.ts';
 
-export type Stamp = { claim: Claim; text: string; frame: number; struck?: boolean; why?: boolean; covers?: Claim; old?: boolean };
+/** why: a reason given at a Split. back: put there by taking a rule back. old: remembered from an earlier night. */
+export type Stamp = { claim: Claim; text: string; frame: number; struck?: boolean; why?: boolean; covers?: Claim; old?: boolean; back?: boolean };
 export type Player = { id: string; name: string; score: number; frames: number[] };
 export type Way = 'explain' | 'takeBack' | 'shrug';
 export type FrameLog = { card: string; decision: OptionId | null; votes: Record<string, OptionId>; split?: Way; grabbers?: string[]; kept?: boolean; notes: string[] };
@@ -35,7 +36,7 @@ export type Game = {
   sevenTen: boolean;   // this frame is that 7-10 split
   bumpers: boolean;    // reward for standing by an explanation
   dryNext: boolean; dry: boolean;  // the tip jar came up short
-  sloppy: boolean;     // the Pin Boy is out
+  sloppy: boolean;     // Timo has left the machine room
   strikeAt: number;    // the Heap: how many pins count as a strike
   bowl: Record<string, Bowl>;
   after: string[] | null;
@@ -131,7 +132,7 @@ function finishFrame(g: Game) {
   }
   const option = card.options.find((o) => o.id === g.decision);
   g.after = [option?.after ?? '', ...log.notes].filter(Boolean);
-  if (card.kind === 'plain') g.after.unshift(card.lane ? 'That was the strange one.' : 'Nothing went wrong. Remember the feeling.');
+  if (card.kind === 'plain') g.after.unshift(card.lane ? 'There was no decision this frame, only the unusual lane.' : 'That was a normal frame.');
   g.phase = 'aftermath';
 }
 
@@ -227,7 +228,7 @@ function settleSecret(g: Game, card: Card) {
   const mine = (id: string) => card.options.find((o) => o.id === g.votes[id])!;
   if (card.id === 'twoGoodBalls') {
     const grab = g.players.filter((p) => g.votes[p.id] === 'B').map((p) => p.name);
-    if (solo && rand(g) < 0.35) grab.push('Goose no. 4'); // alone, you are up against the regulars. Only the goose is tempted.
+    if (solo && rand(g) < 0.35) grab.push('One of the geese'); // alone, you are up against the regulars; sometimes one of them grabs
     log.grabbers = grab;
     log.notes.push(grab.length === 0 ? 'Everyone shared, so everyone bowled with a normal ball.'
       : grab.length === 1 ? `${grab[0]} grabbed a good ball and got a perfect one. Everyone else got a wobbly ball.`
@@ -243,13 +244,13 @@ function settleSecret(g: Game, card: Card) {
   }
   if (card.id === 'curtain') {
     // she has never been wrong: whatever you choose is what she predicted
-    log.notes.push('The Counter Lady predicted each choice correctly. One-boxers found ten golden pins. Two-boxers found an empty curtain.');
+    log.notes.push('Marga predicted every choice correctly. Players who bowled only at the curtain found ten golden pins behind it. Players who also bowled at the three pins found nothing behind it.');
     return setBowl(g, (id) => (g.votes[id] === 'A' ? { standing: [], score: { bonus: 10 } } : { standing: [0, 1, 2] }));
   }
   const acted = g.players.filter((p) => g.votes[p.id] === 'A');
   if (card.id === 'glitch') log.notes.push(`Bowlers who used the glitch: ${g.players.filter((p) => g.votes[p.id] === 'B').length} of ${g.players.length}.`);
   if (card.id === 'foul') log.notes.push(`Fouls reported: ${acted.length}.`);
-  if (card.id === 'culprit') log.notes.push(acted.length ? 'Someone confessed. The Janitor is cleared.' : 'Nobody confessed.');
+  if (card.id === 'culprit') log.notes.push(acted.length ? 'Someone confessed, so Kees is cleared.' : 'Nobody confessed.');
   setBowl(g, (id) => ({ lane: mine(id).lane, score: mine(id).score }));
 }
 
@@ -271,10 +272,10 @@ export function step(old: Game, ev: Ev): Game {
       log.kept = g.decision === fits;
       if (log.kept) {
         g.record.survived++; g.bumpers = true;
-        log.notes.push('You stuck to the reason you gave at the Split, so the bumpers are up this frame as a reward.');
+        log.notes.push(`At an earlier Split you gave the reason "${g.stamps[ex.stamp].text}". Your choice here fits that reason, so the bumpers are up this frame as a reward.`);
       } else {
         g.stamps[ex.stamp].struck = true;
-        log.notes.push('You went against the reason you gave at the Split, so it has been crossed off the board.');
+        log.notes.push(`At an earlier Split you gave the reason "${g.stamps[ex.stamp].text}". Your choice here goes against that reason, so it has been crossed off the board.`);
       }
       settle(g, card);
       return g;
@@ -294,7 +295,7 @@ export function step(old: Game, ev: Ev): Game {
       g.record.explained++;
     } else if (ev.way === 'takeBack') {
       const flipped = opposite(was.claim);
-      if (flipped && live(g, flipped) < 0) g.stamps[g.splitAgainst] = { claim: flipped, text: RULES[flipped], frame: g.frame };
+      if (flipped && live(g, flipped) < 0) g.stamps[g.splitAgainst] = { claim: flipped, text: RULES[flipped], frame: g.frame, back: true };
       else was.struck = true;
       g.record.takenBack++;
     } else {
@@ -331,15 +332,15 @@ export function step(old: Game, ev: Ev): Game {
   return old;
 }
 
-/** The reasons on offer at the current Split. Outside the clash a card was built for, the only reason is the honest one. */
+/** The reasons on offer at the current Split: the card's own (if it was built for this clash), then the general ones for that rule. */
 export function reasonsFor(g: Game) {
   if (g.phase !== 'split' || g.splitAgainst === null) return [];
   const card = cardOf(g), old = g.stamps[g.splitAgainst];
-  const offered = card.splitOn?.includes(old.claim) ? card.differences ?? [] : [];
-  const honest = { text: 'No real difference. It simply suited us better this time', says: 'self:A' };
+  const offered = [...(card.splitOn?.includes(old.claim) ? card.differences ?? [] : []), ...(EXCEPTIONS[old.claim] ?? [])];
+  const honest = { text: 'There is no real difference. This choice simply suited us better this time', says: 'self:A' };
   // a reason that is already a rule, or whose opposite is, cannot be given again
-  const open = offered.filter((d) => live(g, d.says) < 0 && !(opposite(d.says) && live(g, opposite(d.says)!) >= 0));
-  return old.claim === 'self:A' ? [] : open.some((d) => d.says === 'self:A') || live(g, 'self:A') >= 0 ? open : [...open, honest];
+  const open = offered.filter((d, i) => offered.findIndex((x) => x.says === d.says) === i && live(g, d.says) < 0 && !(opposite(d.says) && live(g, opposite(d.says)!) >= 0)).slice(0, 3);
+  return old.claim === 'self:A' || open.some((d) => d.says === 'self:A') || live(g, 'self:A') >= 0 ? open : [...open, honest];
 }
 
 /** The House Record, the epilogue, the review and each player's receipt. */
@@ -347,16 +348,16 @@ export function summary(g: Game) {
   const first = g.stamps.find((s) => !s.why && PEOPLE[s.claim]) ?? g.stamps.find((s) => PEOPLE[s.claim]);
   const people = first ? PEOPLE[first.claim] : 'Bowlers';
   const shrugged = g.log.find((l) => l.split === 'shrug'), r = g.record;
-  const title = shrugged ? `${people} until ${CARDS[shrugged.card].until ?? 'it costs pins'}`
-    : r.explained ? `${people}, with ${r.explained === 1 ? 'a footnote' : `${r.explained} footnotes`}`
-    : r.takenBack ? `Reformed ${people.toLowerCase()}`
-    : `Unbending ${people.toLowerCase()}. Suspicious.`;
+  const title = shrugged ? `${people}, except ${CARDS[shrugged.card].until ?? 'when it costs pins'}`
+    : r.explained ? `${people}, who explained ${r.explained === 1 ? 'one Split' : `${r.explained} Splits`}`
+    : r.takenBack ? `${people}, who changed their minds`
+    : `${people}, who never contradicted themselves`;
   const epilogue = g.log.flatMap((l) => {
     const c = CARDS[l.card];
     const o = c.kind === 'secret' ? c.options.find((x) => x.epilogue && Object.values(l.votes).includes(x.id)) : c.options.find((x) => x.id === l.decision);
     return o?.epilogue ? [o.epilogue] : [];
   });
-  if (r.shrugged) epilogue.push('The Pinsetter has had your shrug framed. It hangs by the shoe counter.');
+  if (r.shrugged) epilogue.push('Walter wrote down that you shrugged at a Split and left both rules standing.');
   const review = g.log.flatMap((l) => (CARDS[l.card].about ? [{ title: CARDS[l.card].title, about: CARDS[l.card].about }] : []));
   const receipts = g.players.map((p) => {
     // replay this player's own votes against their own earlier votes

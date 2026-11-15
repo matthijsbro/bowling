@@ -23,7 +23,7 @@ async function sendCode(email: string, code: string) {
   if (!mailer) return console.log(`[login] code for ${email}: ${code} (no SMTP_HOST set, so it is printed here)`);
   await mailer.sendMail({
     from: MAIL_FROM ?? SMTP_USER, to: email, subject: `${code} is your Split Decision code`,
-    text: `Your code for Split Decision is ${code}.\n\nIt works for ten minutes. If you did not ask for it, you can ignore this mail.\n\nThe Pinsetter`,
+    text: `Your code for Split Decision is ${code}.\n\nIt works for ten minutes. If you did not ask for it, you can ignore this mail.\n\nWalter, at Split Decision`,
   });
 }
 

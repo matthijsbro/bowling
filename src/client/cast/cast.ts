@@ -3,7 +3,7 @@ import { INK, type Mood, dot, ell, eyes, ln, mouth, sh, sweat, txt } from './dra
 
 const SKIN = '#f2c6a0';
 
-/** The Pinsetter: a tall, tired heron. His three moods are, to the untrained eye, one mood. */
+/** Walter, who runs the alley: a tall heron. His three moods look almost the same. */
 export const pinsetter = (m: Mood) => [
   ln('M100 184L96 220L99 250M99 250l-14 4M99 250l1 7M99 250l14 3M84 180L64 200L86 210M86 210l-9 7M86 210l1 9M86 210l9 5', 2.5),
   dot(96, 220, 3.5), dot(64, 200, 3.5),
@@ -90,12 +90,12 @@ const impostor = (x: number, m: Mood) =>
     dot(1, 110, 2.2), m === 'alarm' ? sweat(-16, 98) : '',
   ].join('')}</g>`;
 
-/** The League Five: five identical geese. Two of them are number 4. One never faces the camera. */
+/** The five geese at the end of lane 3. */
 export const leagueFive = (m: Mood) =>
   [goose(30, '1', m), goose(66, '2', m), goose(100, '3', m), impostor(136, m), goose(170, '4', m)].join('')
   + txt(96, 104, m === 'glee' ? 'HONK' : '', 24, -6);
 
-/** Gerald the bucket. Sits at the bottom left of the box so the Janitor can stand next to him. */
+/** Kees's mop bucket. Sits at the bottom left of the box so Kees can stand next to it. */
 export const gerald = (m: Mood) => [
   sh('M18 218h36l-4 32h-28z', '#c94f3a'), ln('M18 218q18 -24 36 0', 2), dot(30, 229, 2, '#fffdf6'), dot(42, 228, 2.6, '#fffdf6'),
   mouth(36, 235, m, 6), txt(36, 249, 'GERALD', 7, -3, '#fffdf6'),
@@ -147,7 +147,7 @@ export const janitor = (m: Mood) => [
   m === 'alarm' ? sweat(146, 80) : '',
 ].join('');
 
-/** The Counter Lady: a cat who never looks up, whatever the mood. */
+/** Marga, who works at the shoe counter: a cat who never looks up, whatever the mood. */
 export const counterLady = (m: Mood) => [
   sh('M138 178C162 170 162 140 150 130C162 150 150 166 136 166z', '#e8a45a'),
   sh('M62 192C60 152 76 130 100 130C124 130 140 152 138 192z', '#b0567a'), ln('M100 134v54', 1.5), dot(104, 150, 2.2, '#f0c040'), dot(104, 168, 2.2, '#f0c040'),
@@ -170,7 +170,7 @@ export const counterLady = (m: Mood) => [
   sh(ell(82, 183, 12, 7), '#e8a45a', 2), ln('M86 180l13 -24', 3.5, '#3f6fb0'), ln('M86 180l13 -24', 1),
 ].join('');
 
-/** The Pin Boy: a mole. Nose and hands only. */
+/** Timo, who sets the pins in the machine room: a mole. Nose and hands only. */
 export const pinBoy = (m: Mood) => [
   sh('M10 40H190V252H10z', '#7d8791'),
   dot(22, 52, 3), dot(178, 52, 3), dot(22, 240, 3), dot(178, 240, 3),
@@ -208,7 +208,7 @@ export const angry = (m: Mood) => [
   m === 'alarm' ? sweat(140, 44) : '',
 ].join('');
 
-/** The Shoe Thief: a fox in rental shoes two sizes too big. */
+/** Ruud, the shoe thief: a fox in rental shoes two sizes too big. */
 export const thief = (m: Mood) => [
   sh('M124 204C170 208 182 170 164 150C162 170 150 186 122 188z', '#e07a2a'), sh('M164 150q10 12 6 26q-8 -6 -10 -16z', '#fffdf6', 2),
   sh('M60 238h44v14h-52q-2 -10 8 -14z', '#d6402b'), sh('M104 238h44q10 4 8 14h-52z', '#3f7fbf'), ln('M70 244h20M114 244h20', 1.5, '#fffdf6'),
@@ -274,13 +274,13 @@ export const vending = () => [
 ].join('');
 
 export const CAST: { name: string; note: string; draw: (m: Mood) => string }[] = [
-  { name: 'The Pinsetter', note: 'A heron on one leg. Reads the cards, calls Splits, never judges. Has one face. Do not ask about the beak.', draw: pinsetter },
-  { name: 'The Fat Man', note: 'Cheerful regular. Always standing somewhere he should not be. Worth nine pins.', draw: fatMan },
-  { name: 'The Child at lane 4', note: 'Having a birthday. There is a cake. One tooth is elsewhere.', draw: child },
-  { name: 'The League Five', note: 'Always five. Two are number 4. One is a bowling pin. Nobody has said anything.', draw: leagueFive },
-  { name: 'The Janitor', note: 'A raccoon. Fixes everything, owns nothing but Gerald the bucket. Gerald has opinions.', draw: janitor },
-  { name: 'The Counter Lady', note: 'A cat. Predicts what customers will do. Has never looked up. The third eye has.', draw: counterLady },
-  { name: 'The Angry Bowler', note: 'A bull with a 16-pounder and a grudge against the Fat Man. Nobody knows what about.', draw: angry },
-  { name: 'The Shoe Thief', note: 'A fox, and a regular. Sorry about the shoes. Still wearing them.', draw: thief },
-  { name: 'The Pin Boy', note: 'A mole in the machine room. Nobody has seen him bowl. Or seen him. Three hands so far.', draw: pinBoy },
+  { name: 'Walter', note: 'A heron who runs the alley. He reads out each dilemma and calls the Splits.', draw: pinsetter },
+  { name: 'The Fat Man', note: 'A large, cheerful regular who often stands too close to the lanes. Hitting him knocks down nine pins.', draw: fatMan },
+  { name: 'Lotte', note: 'A girl having her eighth birthday party at lane 4. There is a cake.', draw: child },
+  { name: 'The five geese', note: 'Five geese who sit at the end of lane 3 and untangle the pins.', draw: leagueFive },
+  { name: 'Kees', note: 'A raccoon who works as the cleaner. He carries a mop and a bucket.', draw: janitor },
+  { name: 'Marga', note: 'A cat who works at the shoe counter. She predicts what customers will choose and has never been wrong.', draw: counterLady },
+  { name: 'The angry man', note: 'A bull with a 16-pound ball and a grudge against the Fat Man.', draw: angry },
+  { name: 'Ruud', note: 'A fox and a regular player, who stole rental shoes and is sorry about it.', draw: thief },
+  { name: 'Timo', note: 'A mole who sets the pins by hand in the machine room.', draw: pinBoy },
 ];
