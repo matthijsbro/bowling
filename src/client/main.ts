@@ -7,6 +7,7 @@ import { DT, LANE, createSim, fullRack, standingAfter, stepSim, type Lane, type 
 import type { OptionId } from '../shared/types.ts';
 import { isMuted, rollStart, rollStop, setMuted, sfx, unlock } from './audio.ts';
 import { boilDefs, startBoil } from './cast/draw.ts';
+import { lang, setLang, t } from './i18n.ts';
 import * as net from './net.ts';
 import { SCENES, TITLE } from './scenes.ts';
 import { placeActors, poke, react, setScene } from './stage/actors.ts';
@@ -35,6 +36,8 @@ let sim: Sim | null = null, thrown: Throw | null = null, inGutter = false, seen 
 
 const inScene = () => u.screen === 'game' && (u.show === 'card' || u.show === 'react' || u.show === 'split');
 function paint() {
+  document.documentElement.lang = lang;
+  canvas.setAttribute('aria-label', t('Bowling lane. Drag back and flick to throw.'));
   setScene(u.screen !== 'game' ? TITLE : game && inScene() ? SCENES[cardOf(game).id] ?? null : null);
   ui.innerHTML = render(game, u);
 }
@@ -66,7 +69,7 @@ function apply(next: View) {
     // the decision lands: the cast reacts, the rule thumps down, then the lane is yours
     const added = next.stamps.slice(before.stamps.length), way = next.log.at(-1)?.split;
     const st = added.find((s) => s.why) ?? added[0] ?? (way === 'takeBack' ? next.stamps[before.splitAgainst!] : undefined);
-    u.thump = st && !st.struck ? { text: st.text, cls: st.why ? 'why' : '' } : { text: way === 'shrug' ? 'Shrug noted.' : next.decision ? 'Decided.' : 'Everyone has chosen.', cls: 'plain' };
+    u.thump = st && !st.struck ? { text: t(st.text), cls: st.why ? 'why' : '' } : { text: t(way === 'shrug' ? 'Shrug noted.' : next.decision ? 'Decided.' : 'Everyone has chosen.'), cls: 'plain' };
     Object.assign(u, { show: 'react', explaining: false, boardOpen: false });
     react(next.decision ? SCENES[cardOf(before).id]?.react?.[next.decision] : undefined, jolt);
     window.setTimeout(sfx.thump, 250); // the stamp lands
@@ -150,7 +153,7 @@ ui.addEventListener('click', (e) => {
   if (act === 'forgetTeam') return net.send({ t: 'forget' });
   if (act === 'sendCode' || act === 'verify' || act === 'logout') {
     const email = field('#email') || u.codeFor;
-    const call = act === 'sendCode' ? net.api('login/request', { email }) : act === 'verify' ? net.api('login/verify', { email: u.codeFor, code: field('#code') }) : net.api('logout', {});
+    const call = act === 'sendCode' ? net.api('login/request', { email, lang }) : act === 'verify' ? net.api('login/verify', { email: u.codeFor, code: field('#code') }) : net.api('logout', {});
     return void call.then((r) => {
       u.error = r.error ?? '';
       if (!r.error && act === 'sendCode') u.codeFor = email;
@@ -171,6 +174,7 @@ ui.addEventListener('click', (e) => {
     return throwBall({ x: n('#aim') / 100, vx: 0, vy: 4.5 + (n('#power') / 100) * 5, spin: n('#curve') / 100 });
   }
   else if (act === 'mute') setMuted(!isMuted());
+  else if (act === 'lang') setLang(lang === 'nl' ? 'en' : 'nl');
   else if (act === 'read') u.read = true;
   else if (act === 'unread') u.read = false;
   else if (act === 'handed') u.handed = true;
@@ -195,21 +199,21 @@ function throwBall(t: Throw) {
   seen = 0; inGutter = false; u.note = ''; rollStart(); paint();
 }
 
-function landed(s: Sim, t: Throw) {
+function landed(s: Sim, th: Throw) {
   const before = s.lane.standing.filter(Boolean).length, left = standingAfter(s).filter(Boolean).length, hit = before - left;
   const first = myBowl()!.throws === 0;
-  u.note = s.fatmanHit ? 'Nine pins. You hit the Fat Man.' : left === 0 && hit ? (first ? 'STRIKE!' : 'spare!') : hit === 0 ? 'No pins.' : `${hit} down`;
+  u.note = s.fatmanHit ? t('Nine pins. You hit the Fat Man.') : left === 0 && hit ? (first ? 'STRIKE!' : 'spare!') : hit === 0 ? t('No pins.') : t('{0} down', hit);
   rollStop();
   if (left === 0 && hit) {
     // one strike in five, the confetti cannon lets everyone down
-    if (first && Math.random() < 0.2) { burst('confetti', 0, LANE.length, 1, 0.04); sfx.pfft(); u.note += ' The confetti cannon misfired.'; }
+    if (first && Math.random() < 0.2) { burst('confetti', 0, LANE.length, 1, 0.04); sfx.pfft(); u.note += ` ${t('The confetti cannon misfired.')}`; }
     else { burst('confetti', 0, LANE.length, 1, first ? 2 : 1); burst('stars', 0, LANE.length, 1.2); (first ? sfx.strike : sfx.spare)(); }
   } else if (hit === 0 && !s.fatmanHit) sfx.trombone();
-  if (quirks.golden >= 0 && s.lane.standing[quirks.golden] && !standingAfter(s)[quirks.golden]) u.note += ' You hit the golden pin. It counts as one pin, like the others.';
+  if (quirks.golden >= 0 && s.lane.standing[quirks.golden] && !standingAfter(s)[quirks.golden]) u.note += ` ${t('You hit the golden pin. It counts as one pin, like the others.')}`;
   sim = null;
   busyUntil = performance.now() + 1100;
   const who = u.me;
-  send({ t: 'throw', p: who, throw: t });
+  send({ t: 'throw', p: who, throw: th });
   // pass-and-play: leave the result on screen for a moment before the lane changes hands
   window.setTimeout(() => { u.note = ''; if (game && u.show === 'bowl') u.me = whoIsUp(game); paint(); }, 1300);
   u.me = who; paint();

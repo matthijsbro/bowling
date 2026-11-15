@@ -11,11 +11,11 @@ const GEESE = 'five geese who sit at the end of lane 3 and untangle the pins';
 export const FATMAN: Card[] = [
   {
     id: 'switch', title: 'The Switch', kind: 'vote', chain: 'fatman', role: 'setup',
-    text: `A heavy bowling ball has broken loose and is rolling down lane 3 towards ${GEESE}. It will hit all five of them. You are standing next to a lever. If you pull it, the ball switches to lane 4, where it will hit one person instead: Kees, the cleaner, who is mopping lane 4.`,
+    text: `A heavy bowling ball has broken loose and is rolling down lane 3 towards five geese who sit at the end of it and untangle the pins. It will hit all five of them. You are standing next to a lever. If you pull it, the ball switches to lane 4, where it will hit one person instead: Kees, the cleaner, who is mopping lane 4.`,
     about: 'The trolley problem: is it right to turn a danger onto one person in order to save five?',
     options: [
       {
-        id: 'A', label: 'Pull the lever', effect: 'You then bowl on lane 4: all ten pins are standing, but Kees\'s mop bucket is in the middle of the lane.', lane: BUCKET,
+        id: 'A', label: 'Pull the lever', effect: 'You then bowl on lane 4: all ten pins are standing, but Kees\'s mop bucket is still in the middle of the lane.', lane: BUCKET,
         says: 'numbers:A',
         after: 'Kees saw the ball coming and jumped aside just in time. The ball hit his mop bucket instead and dented it.',
         epilogue: 'Kees now mops facing the oncoming balls. He still uses the dented bucket.',
@@ -62,7 +62,7 @@ export const FATMAN: Card[] = [
       {
         id: 'A', label: 'Pull the lever', effect: FAT_MAN_TEXT, lane: FAT_MAN_DOWN,
         says: 'numbers:A', breaks: ['tool:A'],
-        after: 'The trapdoor opened and the Fat Man dropped onto the lane. The ball hit him and stopped. He landed on his nachos and is more upset about them than about his bruises.',
+        after: 'The trapdoor opened and the Fat Man dropped onto the lane. The ball hit him and stopped. He landed on his nachos and is upset about that.',
         epilogue: 'The trapdoor has been nailed shut. The Fat Man checks the nails every time he comes in.',
       },
       {

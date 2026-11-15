@@ -19,11 +19,12 @@ const TYPES: Record<string, string> = {
 // Mail for login codes. Without SMTP settings the code is printed here instead, which is enough to try things out.
 const { SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS, MAIL_FROM } = process.env;
 const mailer = SMTP_HOST ? nodemailer.createTransport({ host: SMTP_HOST, port: Number(SMTP_PORT ?? 587), secure: Number(SMTP_PORT) === 465, auth: SMTP_USER ? { user: SMTP_USER, pass: SMTP_PASS } : undefined }) : null;
-async function sendCode(email: string, code: string) {
+async function sendCode(email: string, code: string, nl = false) {
   if (!mailer) return console.log(`[login] code for ${email}: ${code} (no SMTP_HOST set, so it is printed here)`);
   await mailer.sendMail({
-    from: MAIL_FROM ?? SMTP_USER, to: email, subject: `${code} is your Split Decision code`,
-    text: `Your code for Split Decision is ${code}.\n\nIt works for ten minutes. If you did not ask for it, you can ignore this mail.\n\nWalter, at Split Decision`,
+    from: MAIL_FROM ?? SMTP_USER, to: email, subject: nl ? `${code} is je Split Decision-code` : `${code} is your Split Decision code`,
+    text: nl ? `Je code voor Split Decision is ${code}.\n\nHij werkt tien minuten. Als je er niet om hebt gevraagd, kun je deze mail negeren.\n\nWalter, van Split Decision`
+      : `Your code for Split Decision is ${code}.\n\nIt works for ten minutes. If you did not ask for it, you can ignore this mail.\n\nWalter, at Split Decision`,
   });
 }
 
@@ -44,7 +45,7 @@ async function api(req: IncomingMessage, res: ServerResponse, path: string) {
   if (req.method !== 'POST') return json(res, 404, { error: 'not found' });
   const b = await body(req);
   if (path === '/api/login/request') {
-    const r = await requestCode(db(), b.email, ipOf(req), now, sendCode);
+    const r = await requestCode(db(), b.email, ipOf(req), now, (e, c) => sendCode(e, c, b.lang === 'nl'));
     return r === 'ok' ? json(res, 200, { ok: true }) : json(res, r === 'too-many' ? 429 : 400, { error: r === 'too-many' ? 'Too many codes asked for. Try again in ten minutes.' : 'That does not look like an email address.' });
   }
   if (path === '/api/login/verify') {

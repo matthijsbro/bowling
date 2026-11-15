@@ -2,6 +2,7 @@
 import { LANE, PIN_SPOTS, type Lane, type Pin, type Prop, type Sim } from '../../shared/sim.ts';
 import { SPRITES } from '../cast/sprites.ts';
 import { INK, PAPER, blob, boil, fill, hatch, noise, stroke } from './ink.ts';
+import { t } from '../i18n.ts';
 
 export type View = { w: number; h: number; camY: number };
 /** What the hanging scoreboard shows. */
@@ -170,7 +171,7 @@ function drawRoom(ctx: CanvasRenderingContext2D, v: View, near: number, now: num
   stroke(ctx, wall(pitL, pitR, 0, 1.9), 77, 2.5, INK, true);
   stroke(ctx, [P(v, pitL, FAR, 0.95), P(v, pitR, FAR, 0.95)], 78, 2);
   stroke(ctx, [P(v, GUT + 0.16, FAR, 0), P(v, GUT + 0.16, FAR, 1.9)], 79, 2);
-  const mask = project(v, 0, FAR, 1.42), ad = ADS[Math.floor(now / 7000) % ADS.length];
+  const mask = project(v, 0, FAR, 1.42), ad = t(ADS[Math.floor(now / 7000) % ADS.length]);
   label(ctx, '3', mask.x - mask.s * 0.6, mask.y, mask.s * 0.5, '#fffdf6');
   label(ctx, ad, mask.x + mask.s * 0.12, mask.y, mask.s * 0.19, 'rgba(255,253,246,.85)', mask.s * 1.05, -0.012); // the mask rents itself out
   label(ctx, '4', project(v, LANE4, FAR, 1.42).x, mask.y, mask.s * 0.5, '#fffdf6');
@@ -209,7 +210,7 @@ function drawRoom(ctx: CanvasRenderingContext2D, v: View, near: number, now: num
   const m = wall(-0.78, 0.78, 2.12, 2.82), mc = project(v, 0, FAR, 2.47), ms = mc.s;
   for (const x of [-0.6, 0.6]) stroke(ctx, [P(v, x, FAR, 2.82), [P(v, x, FAR, 2.82)[0], 0]], 130 + x, 1.5);
   fill(ctx, m, '#22302b', 3, 2); stroke(ctx, m, 131, 2.5, INK, true);
-  label(ctx, 'LANE 3', mc.x - ms * 0.42, mc.y - ms * 0.17, ms * 0.17, '#9be28a');
+  label(ctx, t('LANE 3'), mc.x - ms * 0.42, mc.y - ms * 0.17, ms * 0.17, '#9be28a');
   label(ctx, board.total, mc.x + ms * 0.4, mc.y - ms * 0.02, ms * 0.44, '#9be28a', ms * 0.62);
   for (let i = 0; i < board.of; i++) { // one pip per frame, lit when played
     ctx.fillStyle = i < board.frames ? '#9be28a' : '#3d5248';
