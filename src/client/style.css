@@ -87,7 +87,7 @@ button:focus-visible { outline: 3px dashed var(--red); outline-offset: 3px; }
 
 .title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 7dvh 16px max(18px, env(safe-area-inset-bottom)); box-sizing: border-box; text-align: center; pointer-events: none !important; }
 .title > * { pointer-events: auto; }
-.title > div:first-child { pointer-events: none; } /* taps on the logo fall through to the alley, where the pigeon is */
+.title.home > div:first-child { pointer-events: none; } /* only on the start screen: taps on the logo fall through to the alley, where the pigeon is */
 .title h1 { margin: 0; font-size: clamp(54px, 17vw, 96px); line-height: .82; rotate: -5deg; text-shadow: 4px 5px 0 #e07a8a; }
 .title h1 span { display: block; }
 .title h1 span + span { margin-left: .5em; color: var(--red); text-shadow: 4px 5px 0 var(--ink); }
